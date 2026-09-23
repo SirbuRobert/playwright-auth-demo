@@ -41,6 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# next.js dev regenerates these AI-agent hint files; not part of the deliverable
+AGENTS.md
+CLAUDE.md
+
 # playwright
 /test-results/
 /playwright-report/
