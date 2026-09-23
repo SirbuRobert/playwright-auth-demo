@@ -1,11 +1,11 @@
 import { SharedPage } from "./shared_page";
 
 export class LoginPage extends SharedPage {
-  private readonly emailInput = this.page.getByLabel("Email");
-  private readonly passwordInput = this.page.getByLabel("Password");
-  private readonly submitButton = this.page.getByRole("button", { name: "Log in" });
-  private readonly errorMessage = this.page.getByRole("alert");
-  private readonly verifiedStatus = this.page.getByRole("status");
+  private readonly emailInput = this.main.getByLabel("Email");
+  private readonly passwordInput = this.main.getByLabel("Password");
+  private readonly submitButton = this.main.getByRole("button", { name: "Log in" });
+  private readonly errorMessage = this.main.getByRole("alert");
+  private readonly verifiedStatus = this.main.getByRole("status");
 
   async goto() {
     await this.page.goto("/login");

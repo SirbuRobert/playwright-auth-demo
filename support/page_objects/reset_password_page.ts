@@ -1,13 +1,13 @@
 import { SharedPage } from "./shared_page";
 
 export class ResetPasswordPage extends SharedPage {
-  private readonly emailInput = this.page.getByLabel("Email");
-  private readonly sendCodeButton = this.page.getByRole("button", { name: "Send code" });
-  private readonly codeInput = this.page.getByLabel("Code");
-  private readonly newPasswordInput = this.page.getByLabel("New password");
-  private readonly resetButton = this.page.getByRole("button", { name: "Reset password" });
-  private readonly errorMessage = this.page.getByRole("alert");
-  private readonly doneHeading = this.page.getByRole("heading", { name: "Password updated" });
+  private readonly emailInput = this.main.getByLabel("Email");
+  private readonly sendCodeButton = this.main.getByRole("button", { name: "Send code" });
+  private readonly codeInput = this.main.getByLabel("Code");
+  private readonly newPasswordInput = this.main.getByLabel("New password");
+  private readonly resetButton = this.main.getByRole("button", { name: "Reset password" });
+  private readonly errorMessage = this.main.getByRole("alert");
+  private readonly doneHeading = this.main.getByRole("heading", { name: "Password updated" });
 
   async goto() {
     await this.page.goto("/reset-password");
