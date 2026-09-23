@@ -71,6 +71,11 @@ the signup/verify/login flow.
 secrets: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ETHEREAL_USER`,
 `ETHEREAL_PASS`, `SESSION_PASSWORD`.
 
+## Recording
+
+[`docs/recording.mov`](docs/recording.mov) — a 5-minute walkthrough of the repo
+structure and the parallel-session login setup (`tests/setup/auth.setup.ts`).
+
 ## What I'd change with more time
 
 - One shared Ethereal mailbox across all tests works at this scale but wouldn't scale

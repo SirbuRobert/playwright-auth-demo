@@ -70,5 +70,5 @@ Two variants, both against a real mailbox (Ethereal), not a mock:
 
 ## 6. Recording
 
-5-minute walkthrough covering items 1 and 2 above — recorded separately, not part
-of this repo's history.
+[`docs/recording.mov`](https://github.com/SirbuRobert/playwright-auth-demo/blob/main/docs/recording.mov)
+— 5-minute walkthrough covering items 1 and 2 above.
