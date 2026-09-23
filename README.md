@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Playwright Auth Demo
 
-## Getting Started
+A small, self-contained Next.js app — signup, email verification, login, and password
+reset — built to be tested, not to be a product. It exists to demonstrate a Playwright
+test suite against a real running app with real email delivery, not against a mocked
+backend.
 
-First, run the development server:
+## The app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Sign up** with email + password. Sends a verification link by email; the account
+  can't log in until it's clicked.
+- **Log in / log out** with a signed, `httpOnly` session cookie ([iron-session](https://github.com/vvo/iron-session)).
+- **Password reset** by emailing a 6-digit code, entered on `/reset-password`.
+- **Dashboard**, a protected page that redirects to `/login` without a session.
+
+Stack: Next.js (App Router) + TypeScript, [Upstash Redis](https://upstash.com) for the
+user/token store, [Ethereal](https://ethereal.email) for email delivery, [bcryptjs](https://github.com/dcodeIO/bcrypt.js)
+for password hashing.
+
+## Test data: why Ethereal
+
+Tests need to receive real, deliverable email — clicking a verification link or reading
+a reset code only means something if the email actually arrived. Ethereal is
+nodemailer's disposable SMTP/IMAP service: free, no signup, and every message sent
+through it is retrievable over IMAP from the same account. Tests generate a unique
+throwaway address per run (`support/api/ethereal.ts`), sign up with it, and poll the
+shared Ethereal mailbox by `to` address until the matching email shows up.
+
+(The project briefly used [MailSlurp](https://mailslurp.com) instead — one real disposable
+inbox per test, which is a nicer model — until its free-tier inbox-creation quota ran out
+during development. Ethereal has no such cap.)
+
+## Project layout
+
+```
+app/                        # Next.js app (signup, login, reset, dashboard) + API routes
+lib/                        # Redis-backed user/token store, password hashing, session, mail
+tests/
+  setup/auth.setup.ts        # logs in once, saves storageState for parallel test projects
+  specs/                      # spec files
+support/
+  page_objects/               # POM classes + page_manager.ts registry
+  fixtures.ts                 # custom `test` export (always import this, not @playwright/test)
+  api/ethereal.ts              # test inbox address + real email fetch/parse helpers
+.github/workflows/playwright.yml
+playwright.config.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running it locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy `.env.example` to `.env` and fill in:
+   - Upstash Redis REST URL + token
+   - An Ethereal test account (`node -e "require('nodemailer').createTestAccount().then(a => console.log(a))"`)
+   - A random 32+ character `SESSION_PASSWORD`
+2. `npm install`
+3. `npm run dev` — app on http://localhost:3000
+4. `npx playwright test` — Playwright starts the dev server itself if it isn't already running
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Parallel test sessions
 
-## Learn More
+`tests/setup/auth.setup.ts` signs up a throwaway account, verifies it via a real emailed
+link, logs in, and saves the authenticated browser state to `playwright/.auth/user.json`.
+`playwright.config.ts` wires this as a `setup` project that every other project depends
+on, so parallel spec files reuse one already-logged-in session instead of each repeating
+the signup/verify/login flow.
 
-To learn more about Next.js, take a look at the following resources:
+## CI
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`.github/workflows/playwright.yml` runs the suite as a 3-way shard matrix
+(`--shard=1/3`, `2/3`, `3/3`), each shard a separate job. Requires these repository
+secrets: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `ETHEREAL_USER`,
+`ETHEREAL_PASS`, `SESSION_PASSWORD`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What I'd change with more time
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- One shared Ethereal mailbox across all tests works at this scale but wouldn't scale
+  cleanly to a much bigger suite — a real per-test inbox provider (MailSlurp, on a paid
+  tier) is the better long-term model.
+- The app has no rate limiting on signup/login/reset — fine for a test target, not for
+  anything real.
