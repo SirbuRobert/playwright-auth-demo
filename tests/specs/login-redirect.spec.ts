@@ -17,7 +17,5 @@ test("redirects to the dashboard after login", async ({ page, pageManager }) => 
   const loginPage = pageManager.onLoginPage();
   await loginPage.login(email, password);
 
-  // Login redirects client-side once the API call resolves; give it a moment.
-  await page.waitForTimeout(300);
-  expect(page.url()).toContain("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
 });
