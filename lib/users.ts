@@ -11,23 +11,23 @@ function userKey(email: string): string {
 }
 
 export async function getUser(email: string): Promise<User | null> {
-  return redis.get<User>(userKey(email));
+  return redis().get<User>(userKey(email));
 }
 
 export async function createUser(email: string, passwordHash: string): Promise<User> {
   const user: User = { email: email.toLowerCase(), passwordHash, verified: false };
-  await redis.set(userKey(email), user);
+  await redis().set(userKey(email), user);
   return user;
 }
 
 export async function markVerified(email: string): Promise<void> {
   const user = await getUser(email);
   if (!user) return;
-  await redis.set(userKey(email), { ...user, verified: true });
+  await redis().set(userKey(email), { ...user, verified: true });
 }
 
 export async function setPassword(email: string, passwordHash: string): Promise<void> {
   const user = await getUser(email);
   if (!user) return;
-  await redis.set(userKey(email), { ...user, passwordHash });
+  await redis().set(userKey(email), { ...user, passwordHash });
 }
