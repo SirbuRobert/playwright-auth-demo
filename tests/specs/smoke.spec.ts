@@ -1,5 +1,5 @@
 import { test, expect } from "@/support/fixtures";
-import { createTestInbox } from "@/support/api/mailslurp";
+import { createTestEmailAddress } from "@/support/api/ethereal";
 
 const password = "Playwright-test-1";
 
@@ -7,16 +7,16 @@ test.describe("signup and login", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test("rejects login before the account is verified", async ({ pageManager }) => {
-    const inbox = await createTestInbox();
+    const email = createTestEmailAddress();
 
     const signupPage = pageManager.onSignupPage();
     await signupPage.goto();
-    await signupPage.signUp(inbox.emailAddress, password);
+    await signupPage.signUp(email, password);
     await expect(signupPage.onCheckEmailHeading).toBeVisible();
 
     const loginPage = pageManager.onLoginPage();
     await loginPage.goto();
-    await loginPage.login(inbox.emailAddress, password);
+    await loginPage.login(email, password);
     await expect(loginPage.onErrorMessage).toHaveText("Please verify your email before logging in.");
   });
 });

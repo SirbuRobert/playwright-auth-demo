@@ -1,32 +1,32 @@
 import { test, expect } from "@/support/fixtures";
-import { createTestInbox, waitForLatestEmail, extractUrl, extractCode } from "@/support/api/mailslurp";
+import { createTestEmailAddress, waitForEmailTo, extractUrl, extractCode } from "@/support/api/ethereal";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test("resets a forgotten password using a 6-digit code from a real email", async ({ page, pageManager }) => {
-  const inbox = await createTestInbox();
+  const email = createTestEmailAddress();
   const password = "Playwright-test-1";
   const newPassword = "Playwright-test-2";
 
   const signupPage = pageManager.onSignupPage();
   await signupPage.goto();
-  await signupPage.signUp(inbox.emailAddress, password);
+  await signupPage.signUp(email, password);
 
-  const verifyEmailBody = await waitForLatestEmail(inbox.id);
-  await page.goto(extractUrl(verifyEmailBody));
+  const verifyEmail = await waitForEmailTo(email);
+  await page.goto(extractUrl(verifyEmail.body));
 
   const resetPasswordPage = pageManager.onResetPasswordPage();
   await resetPasswordPage.goto();
-  await resetPasswordPage.requestCode(inbox.emailAddress);
+  await resetPasswordPage.requestCode(email);
 
-  const resetEmailBody = await waitForLatestEmail(inbox.id);
-  const code = extractCode(resetEmailBody);
+  const resetEmail = await waitForEmailTo(email, { afterUid: verifyEmail.uid });
+  const code = extractCode(resetEmail.body);
   await resetPasswordPage.confirmReset(code, newPassword);
   await expect(resetPasswordPage.onDoneHeading).toBeVisible();
 
   const loginPage = pageManager.onLoginPage();
   await loginPage.goto();
-  await loginPage.login(inbox.emailAddress, newPassword);
+  await loginPage.login(email, newPassword);
 
   const dashboardPage = pageManager.onDashboardPage();
   await expect(dashboardPage.onHeading).toBeVisible();
